@@ -9,10 +9,25 @@ void init_io(){
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(SQL_pin,INPUT);
 
-  pinMode(wifi_reset_btn, INPUT);  //wifi button
+
+  pinMode(wifi_reset_btn, INPUT_PULLUP);  //wifi button
 
 }
 
+
+int reset_detection(){
+
+  if(digitalRead(wifi_reset_btn)==LOW){
+    delay(2000);
+    if(digitalRead(wifi_reset_btn)==LOW){
+      Serial.println("i Long 2s press detected");
+      return 1;
+    }
+
+  }
+  Serial.println("i long press detection done");
+  return 0;
+}
 
 float noise_cal(){
   // Noise level calibration

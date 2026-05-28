@@ -6,13 +6,13 @@ void saveConfigCallback () {
 
 void init_file_system() {
   if (SPIFFS.begin()) {
-    Serial.println("mounted file system");
+    //Serial.println("mounted file system");
     if (SPIFFS.exists("/config.json")) {
       //file exists, reading and loading
       Serial.println("reading config file");
       File configFile = SPIFFS.open("/config.json", "r");
       if (configFile) {
-        Serial.println("opened config file");
+        Serial.println("i opened config file");
         size_t size = configFile.size();
         // Allocate a buffer to store contents of the file.
         std::unique_ptr<char[]> buf(new char[size]);
@@ -35,13 +35,13 @@ void init_file_system() {
           //strcpy(mqtt_port, json["mqtt_port"]);
           //strcpy(api_token, json["api_token"]);
         } else {
-          Serial.println("failed to load json config");
+          Serial.println("e failed to load json config");
         }
         configFile.close();
       }
     }
   } else {
-    Serial.println("failed to mount FS");
+    Serial.println("e failed to mount FS");
   }
 }
 
@@ -50,37 +50,6 @@ void wifi_manager_reset() {
   WiFiManager wm;
   wm.resetSettings();
 }
-
-
-void wifi_manager_config_manual(){
-  WiFiManagerParameter custom_mqtt_server("server", "mqtt server", "phys.cmb.ac.lk", 100);
-  WiFiManagerParameter custom_mqtt_port("port", "mqtt port", "1883", 6);
-  WiFiManagerParameter custom_user_call("u_c", "User Call", "N0CALL", 10);
-  WiFiManagerParameter custom_user_rcall("u_rc", "Repeater Call", "N0RCALL", 10);
-  WiFiManagerParameter custom_user_state("u_state", "State", "NA", 2);
-  WiFiManagerParameter custom_user_cutoff("u_audio_cut", "Audio cutoff", "200", 4);
-
-  wifiManager.setDebugOutput(true);  // testing
-  //set config save notify callback
-  wifiManager.setSaveConfigCallback(saveConfigCallback);
-  wifiManager.setConfigPortalBlocking(true);
-  wifiManager.setConfigPortalTimeout(300);
-  wifiManager.setTimeout(60);
-  wifiManager.setConnectRetries(10);
-
-
-  //add all your parameters here
-  wifiManager.addParameter(&custom_mqtt_server);
-  wifiManager.addParameter(&custom_mqtt_port);
-  wifiManager.addParameter(&custom_user_call);
-  wifiManager.addParameter(&custom_user_rcall);
-  wifiManager.addParameter(&custom_user_state);
-  wifiManager.addParameter(&custom_user_cutoff);
-
-  wifiManager.startConfigPortal("Bandmon-0");
-
-}
-
 
 int wifi_manager_config() {
 
@@ -93,7 +62,7 @@ int wifi_manager_config() {
   WiFiManagerParameter custom_user_state("u_state", "State", "NA", 2);
   WiFiManagerParameter custom_user_cutoff("u_audio_cut", "Audio cutoff", "200", 4);
 
-  wifiManager.setDebugOutput(true);  // testing
+  //wifiManager.setDebugOutput(true);  // testing
 
   //set config save notify callback
   wifiManager.setSaveConfigCallback(saveConfigCallback);
@@ -115,7 +84,7 @@ int wifi_manager_config() {
   wifiManager.addParameter(&custom_user_cutoff);
 
   if (!wifiManager.autoConnect("Bandmon")) {
-    Serial.println("failed to connect");
+    Serial.println("e failed to connect");
 
     // run the non-blocking routine
     while(WiFi.status() != WL_CONNECTED){
@@ -133,7 +102,7 @@ int wifi_manager_config() {
     user_data.audio_cutoff = atoi(custom_user_cutoff.getValue());
 
     if (shouldSaveConfig) {
-    Serial.println("[i] Save config settings to EEPROM");
+    Serial.println("i Save config settings to EEPROM");
     write_EEPROM_wifi();
     }
     return 1;

@@ -27,6 +27,8 @@ git clone git@github.com:knolleary/pubsubclient.git
 - [x] Basic code for Wifi and MQTT connection
 - [x] Send repeater activity based on audio input
  - [x] EEPROM data save
+	 - [ ] Increase the URL space to allow for a longer address
+	 - [ ] add a serial syntax for reset ?
 - [ ] Configurable settings TUI
 - [ ] Hardware design 
     - [ ] final PCB design - audio based

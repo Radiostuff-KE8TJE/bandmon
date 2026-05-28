@@ -12,12 +12,11 @@
 
 #define SQL_pin 0
 #define analog_in A0
-#define wifi_reset_btn 0
-
+#define wifi_reset_btn 5
 //#define debug  // uncomment for debug prints
 //#define SOUND_IN // uncomment if audio is provided
 
-//#define reset_wifiman 1
+
 
 //#define reset_wifiman 1
 #define init_user_data
@@ -93,12 +92,18 @@ void setup() {
 
   Serial.begin(9600);
   chipid = ESP.getChipId();  //get_chip_id();
-  Serial.println("\ni Init bandmon - KE8TJE");
+  Serial.println("\n\n\n\n\ni Init bandmon - KE8TJE");
   Serial.print("i Chipid:");
   Serial.println(ESP.getChipId());
+  Serial.print("i MAC Address: ");
+  Serial.println(WiFi.macAddress());
+  
 
   //io config
   init_io();
+
+  //reset_detection(); // buggy - need to find the correct pin ids for the ESP12F
+
 
 
 
@@ -106,6 +111,9 @@ void setup() {
   read_EEPROM_wifi();
 
   init_file_system();
+
+  // long press reset
+  
 
 
 #ifdef reset_wifiman
@@ -153,6 +161,7 @@ void setup() {
   Serial.println("i WiFi connected");
   Serial.print("i IP address: ");
   Serial.println(WiFi.localIP());
+  digitalWrite(LED_BUILTIN,HIGH);
 
   delay(500);
 
@@ -176,7 +185,7 @@ void loop() {
   wifiManager.process();
 
   if (!client.connected()) {
-    digitalWrite(LED_BUILTIN, LOW);
+    digitalWrite(LED_BUILTIN, HIGH);
     long now = millis();
     if (now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
@@ -200,16 +209,19 @@ void loop() {
 
     if (adc > max_val) {
       max_val = adc;
+      digitalWrite(LED_BUILTIN, LOW);  // peak detection led
     }
 
     if (min_val > adc) {
       min_val = adc;
     }
     delay(10);
+    digitalWrite(LED_BUILTIN, HIGH);
   }
 
   //Debug output
   if (debug_print) {
+    Serial.print("d ");
     Serial.print(max_val - avg_val);
     Serial.print(",");
     Serial.println(talk_time);
