@@ -1,11 +1,10 @@
-
 //callback notifying us of the need to save config
 void saveConfigCallback () {
   Serial.println("Should save config");
   shouldSaveConfig = true;
 }
 
-void init_file_system(){
+void init_file_system() {
   if (SPIFFS.begin()) {
     Serial.println("mounted file system");
     if (SPIFFS.exists("/config.json")) {
@@ -20,11 +19,11 @@ void init_file_system(){
 
         configFile.readBytes(buf.get(), size);
 
- #if defined(ARDUINOJSON_VERSION_MAJOR) && ARDUINOJSON_VERSION_MAJOR >= 6
+#if defined(ARDUINOJSON_VERSION_MAJOR) && ARDUINOJSON_VERSION_MAJOR >= 6
         DynamicJsonDocument json(1024);
         auto deserializeError = deserializeJson(json, buf.get());
         serializeJson(json, Serial);
-        if ( ! deserializeError ) {
+        if (!deserializeError) {
 #else
         DynamicJsonBuffer jsonBuffer;
         JsonObject& json = jsonBuffer.parseObject(buf.get());
@@ -47,33 +46,27 @@ void init_file_system(){
 }
 
 
-void wifi_manager_reset(){
-    WiFiManager wm;
-    wm.resetSettings();
+void wifi_manager_reset() {
+  WiFiManager wm;
+  wm.resetSettings();
 }
 
-void wifi_manager_config(){
 
-  // Parameter list with defaults 
-
-  WiFiManagerParameter custom_mqtt_server("server", "mqtt server", "phys.cmb.ac.lk", 30);
+void wifi_manager_config_manual(){
+  WiFiManagerParameter custom_mqtt_server("server", "mqtt server", "phys.cmb.ac.lk", 100);
   WiFiManagerParameter custom_mqtt_port("port", "mqtt port", "1883", 6);
   WiFiManagerParameter custom_user_call("u_c", "User Call", "N0CALL", 10);
   WiFiManagerParameter custom_user_rcall("u_rc", "Repeater Call", "N0RCALL", 10);
   WiFiManagerParameter custom_user_state("u_state", "State", "NA", 2);
   WiFiManagerParameter custom_user_cutoff("u_audio_cut", "Audio cutoff", "200", 4);
 
-  wifiManager.setDebugOutput(true); // testing
-
+  wifiManager.setDebugOutput(true);  // testing
   //set config save notify callback
   wifiManager.setSaveConfigCallback(saveConfigCallback);
-  
-  wifiManager.setConfigPortalBlocking(false);
-  wifiManager.setConfigPortalTimeout(60);
-  wifiManager.setTimeout(30);
+  wifiManager.setConfigPortalBlocking(true);
+  wifiManager.setConfigPortalTimeout(300);
+  wifiManager.setTimeout(60);
   wifiManager.setConnectRetries(10);
-
-  
 
 
   //add all your parameters here
@@ -84,31 +77,71 @@ void wifi_manager_config(){
   wifiManager.addParameter(&custom_user_state);
   wifiManager.addParameter(&custom_user_cutoff);
 
+  wifiManager.startConfigPortal("Bandmon-0");
+
+}
+
+
+int wifi_manager_config() {
+
+  // Parameter list with defaults
+
+  WiFiManagerParameter custom_mqtt_server("server", "mqtt server", "phys.cmb.ac.lk", 100);
+  WiFiManagerParameter custom_mqtt_port("port", "mqtt port", "1883", 6);
+  WiFiManagerParameter custom_user_call("u_c", "User Call", "N0CALL", 10);
+  WiFiManagerParameter custom_user_rcall("u_rc", "Repeater Call", "N0RCALL", 10);
+  WiFiManagerParameter custom_user_state("u_state", "State", "NA", 2);
+  WiFiManagerParameter custom_user_cutoff("u_audio_cut", "Audio cutoff", "200", 4);
+
+  wifiManager.setDebugOutput(true);  // testing
+
+  //set config save notify callback
+  wifiManager.setSaveConfigCallback(saveConfigCallback);
+
+  wifiManager.setConfigPortalBlocking(false);
+  wifiManager.setConfigPortalTimeout(300);  //5 min = 60*5
+  //wifiManager.setTimeout(30);
+  wifiManager.setConnectRetries(10);
+
+
+
+
+  //add all your parameters here
+  wifiManager.addParameter(&custom_mqtt_server);
+  wifiManager.addParameter(&custom_mqtt_port);
+  wifiManager.addParameter(&custom_user_call);
+  wifiManager.addParameter(&custom_user_rcall);
+  wifiManager.addParameter(&custom_user_state);
+  wifiManager.addParameter(&custom_user_cutoff);
 
   if (!wifiManager.autoConnect("Bandmon")) {
-    Serial.println("failed to connect and hit timeout");
-    delay(3000);
-    //reset and try again, or maybe put it to deep sleep
-    ESP.restart();
-    delay(5000);
-  }
+    Serial.println("failed to connect");
 
-  // connected to WIFI
-  Serial.println("i Connected to Wifi");
+    // run the non-blocking routine
+    while(WiFi.status() != WL_CONNECTED){
+      wifiManager.process();
+    }
 
-  //Update user_data with wifiman data
-  strcpy(user_data.mqtt_svr, custom_mqtt_server.getValue());
-  strcpy(user_data.user_call, custom_user_call.getValue());
-  strcpy(user_data.rptr_call, custom_user_rcall.getValue());
-  strcpy(user_data.state, custom_user_state.getValue());
-  user_data.port = atoi(custom_mqtt_port.getValue());
-  user_data.audio_cutoff = atoi(custom_user_cutoff.getValue());
+  }else{
+    Serial.println("Connected");
+    //Update user_data with wifiman data
+    strcpy(user_data.mqtt_svr, custom_mqtt_server.getValue());
+    strcpy(user_data.user_call, custom_user_call.getValue());
+    strcpy(user_data.rptr_call, custom_user_rcall.getValue());
+    strcpy(user_data.state, custom_user_state.getValue());
+    user_data.port = atoi(custom_mqtt_port.getValue());
+    user_data.audio_cutoff = atoi(custom_user_cutoff.getValue());
 
-  //save the custom parameters to EEPROM
-
-  if (shouldSaveConfig) {
+    if (shouldSaveConfig) {
     Serial.println("[i] Save config settings to EEPROM");
     write_EEPROM_wifi();
-
+    }
+    return 1;
   }
+
+
+  
+
+  
+  return 0;
 }

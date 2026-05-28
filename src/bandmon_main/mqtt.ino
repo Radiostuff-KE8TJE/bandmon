@@ -21,7 +21,7 @@ void sub_callback(char* topic, byte* payload, unsigned int length) {
   // constructing the PUBLISH packet.
   Serial.print("topic:");
   Serial.println(topic);
-
+  sprintf(tmp_value,"bandmon/rply/%d",chipid);
 
   for (int i=0;i<length;i++) {
     Serial.print((char)payload[i]);
@@ -48,6 +48,25 @@ void sub_callback(char* topic, byte* payload, unsigned int length) {
     Serial.println("i reset wifi man");
     wifi_manager_reset();
     ESP.restart();
+  }
+
+  if((char)payload[0]=='c'){ 
+    Serial.println("i Noise cal");
+    
+    user_data.audio_cutoff  = noise_cal();
+    char tmp[8];
+    sprintf(tmp,"%.2f",user_data.audio_cutoff);
+    client.publish(tmp_value,tmp);
+  }
+  
+   if((char)payload[0]=='p'){
+    print_user_data();
+  }
+  
+
+  if((char)payload[0]=='w'){
+    Serial.println("i EEPROM save");
+    write_EEPROM_wifi();
   }
   
 

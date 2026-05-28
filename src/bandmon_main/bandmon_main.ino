@@ -12,18 +12,23 @@
 
 #define SQL_pin 0
 #define analog_in A0
+#define wifi_reset_btn 0
 
 //#define debug  // uncomment for debug prints
 //#define SOUND_IN // uncomment if audio is provided
 
+//#define reset_wifiman 1
 
-#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
+//#define reset_wifiman 1
+#define init_user_data
+
+#include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager
 
 #ifdef ESP32
-  #include <SPIFFS.h>
+#include <SPIFFS.h>
 #endif
 
-#include <ArduinoJson.h>          //https://github.com/bblanchon/ArduinoJson
+#include <ArduinoJson.h>  //https://github.com/bblanchon/ArduinoJson
 
 bool shouldSaveConfig = false;
 
@@ -43,7 +48,7 @@ struct s_user_data {
   float lon;
   float lat;
 
-  char mqtt_svr[30];
+  char mqtt_svr[100];
   uint16_t port;
   long timeout;
   float audio_cutoff;
@@ -79,32 +84,40 @@ float avg_val;
 #define wifi_reconnect_interval 5
 int update_count = 0;
 
-int debug_print= 0;
+int debug_print = 0;
 
 
-//#define reset_wifiman 1
-//#define inituser_data
 
 void setup() {
 
 
   Serial.begin(9600);
-  chipid = ESP.getChipId(); //get_chip_id();
+  chipid = ESP.getChipId();  //get_chip_id();
   Serial.println("\ni Init bandmon - KE8TJE");
   Serial.print("i Chipid:");
   Serial.println(ESP.getChipId());
+
+  //io config
+  init_io();
+
+
 
   // restore EEPROM data
   read_EEPROM_wifi();
 
   init_file_system();
-  
+
+
+#ifdef reset_wifiman
+  Serial.println("i reset wifi man");
+  wifi_manager_reset();
+  delay(5);
+#endif
+
+
   wifi_manager_config();
 
-  #ifdef reset_wifiman
-    Serial.println("i reset wifi man");
-    wifi_manager_reset();
-  #endif
+
 
 
   // reding EEPROM needs to happen to get valid data
@@ -122,17 +135,7 @@ void setup() {
 
 
 
-// Noise level calibration
-
-  Serial.println("\n\n Noise level calibration");
-
-  for (int i = 0; i < 500; i++) {
-    avg_val += analogRead(analog_in);
-    delay(10);
-  }
-  avg_val = avg_val / 500;
-  Serial.print("Noice level:");
-  Serial.println(avg_val);
+  
 
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -154,7 +157,7 @@ void setup() {
   delay(500);
 
   client.setServer(user_data.mqtt_svr, user_data.port);
-  client.setCallback(sub_callback); //added callback - v1.2
+  client.setCallback(sub_callback);  //added callback - v1.2
 
   sprintf(topic, "bandmon/%s/%s", user_data.state, user_data.rptr_call);
 
@@ -206,19 +209,19 @@ void loop() {
   }
 
   //Debug output
-  if (debug_print){
-    Serial.print(max_val  - avg_val);
+  if (debug_print) {
+    Serial.print(max_val - avg_val);
     Serial.print(",");
     Serial.println(talk_time);
   }
   //Serial.println(max_val  - avg_val);
 
-  
-  if(max_val - avg_val>user_data.audio_cutoff){
-    talk_time +=2.0; //measurements take 2 s (currently)
-    #ifdef debug
-        Serial.println(talk_time);
-    #endif
+
+  if (max_val - avg_val > user_data.audio_cutoff) {
+    talk_time += 2.0;  //measurements take 2 s (currently)
+#ifdef debug
+    Serial.println(talk_time);
+#endif
   }
 
 

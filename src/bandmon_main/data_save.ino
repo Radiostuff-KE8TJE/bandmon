@@ -12,6 +12,15 @@ void print_user_data(){
 }
 
 
+  // void EEMROM_init(){
+  //    strcpy(user_data.mqtt_svr, custom_mqtt_server.getValue());
+  //   strcpy(user_data.user_call, custom_user_call.getValue());
+  //   strcpy(user_data.rptr_call, custom_user_rcall.getValue());
+  //   strcpy(user_data.state, custom_user_state.getValue());
+  //   user_data.port = atoi(custom_mqtt_port.getValue());
+  //   user_data.audio_cutoff = atoi(custom_user_cutoff.getValue());
+  // }
+
 void read_EEPROM_wifi(){
 
   EEPROM.begin(512);
