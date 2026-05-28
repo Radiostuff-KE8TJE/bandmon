@@ -91,7 +91,9 @@ int wifi_manager_config() {
       wifiManager.process();
     }
 
-  }else{
+  }
+
+
     Serial.println("Connected");
     //Update user_data with wifiman data
     strcpy(user_data.mqtt_svr, custom_mqtt_server.getValue());
@@ -109,8 +111,4 @@ int wifi_manager_config() {
   }
 
 
-  
-
-  
-  return 0;
-}
+\
