@@ -80,3 +80,13 @@ void sub_callback(char* topic, byte* payload, unsigned int length) {
   // Free the memory
   //free(p);
 }
+
+
+void debug_mqtt(float a,float b)
+{
+    sprintf(tmp_value,"bandmon/debug/%d",chipid);
+    
+    char tmp[30];
+    sprintf(tmp,"{val:%.1f,act_t:%.1f}",a,b);
+    client.publish(tmp_value,tmp);
+}

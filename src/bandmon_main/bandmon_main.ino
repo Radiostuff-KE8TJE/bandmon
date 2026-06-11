@@ -225,6 +225,8 @@ void loop() {
     Serial.print(max_val - avg_val);
     Serial.print(",");
     Serial.println(talk_time);
+    debug_mqtt(max_val - avg_val,talk_time);
+
   }
   //Serial.println(max_val  - avg_val);
 
